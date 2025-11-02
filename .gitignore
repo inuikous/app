@@ -48,6 +48,7 @@ tests/
 output/
 outputs/
 test_results/
+templates
 
 # Dataset (comment out if you want to track it)
 dataset_generator/dataset/

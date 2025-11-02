@@ -9,6 +9,54 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # GUIなしでプロット生成
+import os
+from pathlib import Path
+
+
+# テンプレートマッチング用のグローバルキャッシュ
+_TEMPLATES_CACHE = None
+
+
+def load_templates(template_dir='analyzer/templates'):
+    """
+    テンプレート画像を読み込んでキャッシュ
+    
+    Args:
+        template_dir: テンプレートディレクトリのパス
+    
+    Returns:
+        dict: {文字: [(角度, テンプレート画像), ...], ...}
+    """
+    global _TEMPLATES_CACHE
+    
+    if _TEMPLATES_CACHE is not None:
+        return _TEMPLATES_CACHE
+    
+    templates = {}
+    template_path = Path(template_dir)
+    
+    if not template_path.exists():
+        print(f"警告: テンプレートディレクトリが見つかりません: {template_dir}")
+        print("analyzer/template_generator.py を実行してテンプレートを生成してください。")
+        return {}
+    
+    for char in ['A', 'B', 'C', 'D', 'E', 'F']:
+        templates[char] = []
+        
+        # 各角度のテンプレートを読み込み
+        for angle in range(0, 360, 10):
+            filename = f"{char}_{angle:03d}.png"
+            filepath = template_path / filename
+            
+            if filepath.exists():
+                img = cv2.imread(str(filepath), cv2.IMREAD_GRAYSCALE)
+                if img is not None:
+                    templates[char].append((angle, img))
+    
+    _TEMPLATES_CACHE = templates
+    print(f"✓ テンプレート読み込み完了: {sum(len(v) for v in templates.values())} 個")
+    
+    return templates
 
 
 def detect_heart_angle(image_region):
@@ -77,6 +125,62 @@ def detect_heart_angle(image_region):
 
 
 def recognize_character(image_region):
+    """
+    円内の文字を認識（テンプレートマッチング版）
+    
+    データセット構造: 黒円の中に白文字
+    
+    Args:
+        image_region: 円領域の画像（NumPy配列、RGB）
+    
+    Returns:
+        tuple: (文字 (A-F or Unknown), マッチングスコア (0.0-1.0))
+    """
+    # テンプレートを読み込み
+    templates = load_templates()
+    
+    if not templates:
+        # テンプレートがない場合は旧手法にフォールバック
+        result = recognize_character_legacy(image_region)
+        return (result, 0.0)  # 旧手法ではスコアなし
+    
+    # グレースケール変換
+    if len(image_region.shape) == 3:
+        gray = cv2.cvtColor(image_region, cv2.COLOR_RGB2GRAY)
+    else:
+        gray = image_region
+    
+    # 画像を200x200にリサイズ（テンプレートと同サイズ）
+    target_size = 200
+    h, w = gray.shape
+    
+    # 常にリサイズ（アスペクト比は維持しない - 円なので問題なし）
+    gray_resized = cv2.resize(gray, (target_size, target_size))
+    
+    # 全テンプレートとマッチング
+    best_score = -1
+    best_char = 'Unknown'
+    best_angle = 0
+    
+    for char, template_list in templates.items():
+        for angle, template in template_list:
+            # テンプレートマッチング（正規化相関係数）
+            result = cv2.matchTemplate(gray_resized, template, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, _ = cv2.minMaxLoc(result)
+            
+            if max_val > best_score:
+                best_score = max_val
+                best_char = char
+                best_angle = angle
+    
+    # スコアが低すぎる場合はUnknown
+    if best_score < 0.5:  # 閾値（調整可能）
+        return ('Unknown', best_score)
+    
+    return (best_char, best_score)
+
+
+def recognize_character_legacy(image_region):
     """
     円内の文字を認識（Hu Momentsベース）
     
@@ -226,7 +330,7 @@ def recognize_character(image_region):
 
 
 def draw_results_on_image(image, heart_angle, top_char, bottom_char, 
-                         ground_truth=None):
+                         top_score=None, bottom_score=None, ground_truth=None):
     """
     解析結果を画像に描画（正解データがあれば比較表示）
     
@@ -235,6 +339,8 @@ def draw_results_on_image(image, heart_angle, top_char, bottom_char,
         heart_angle: ハートの角度
         top_char: 右上の文字
         bottom_char: 右下の文字
+        top_score: 右上文字のマッチングスコア（0.0-1.0）
+        bottom_score: 右下文字のマッチングスコア（0.0-1.0）
         ground_truth: 正解データの辞書 {'heart_angle': int, 'top_char': str, 'bottom_char': str}
                      Noneの場合は予測結果のみ表示
     
@@ -293,7 +399,8 @@ def draw_results_on_image(image, heart_angle, top_char, bottom_char,
         top_match = (top_char == gt_top)
         top_color = (0, 128, 0) if top_match else (255, 0, 0)
         top_symbol = "OK" if top_match else "NG"
-        top_text = f"Top: {gt_top} -> {top_char} [{top_symbol}]"
+        score_text = f" (score: {top_score:.3f})" if top_score is not None else ""
+        top_text = f"Top: {gt_top} -> {top_char} [{top_symbol}]{score_text}"
         draw_text_with_bg(top_text, (10, y_offset), font_small, text_color=top_color)
         y_offset += 25
         
@@ -302,14 +409,17 @@ def draw_results_on_image(image, heart_angle, top_char, bottom_char,
         bottom_match = (bottom_char == gt_bottom)
         bottom_color = (0, 128, 0) if bottom_match else (255, 0, 0)
         bottom_symbol = "OK" if bottom_match else "NG"
-        bottom_text = f"Bottom: {gt_bottom} -> {bottom_char} [{bottom_symbol}]"
+        score_text = f" (score: {bottom_score:.3f})" if bottom_score is not None else ""
+        bottom_text = f"Bottom: {gt_bottom} -> {bottom_char} [{bottom_symbol}]{score_text}"
         draw_text_with_bg(bottom_text, (10, y_offset), font_small, text_color=bottom_color)
         
     else:
         # 正解データがない場合：予測結果のみ表示
         heart_text = f"Heart: {heart_angle:.1f}deg"
-        top_text = f"Top: {top_char}"
-        bottom_text = f"Bottom: {bottom_char}"
+        score_top = f" (score: {top_score:.3f})" if top_score is not None else ""
+        score_bottom = f" (score: {bottom_score:.3f})" if bottom_score is not None else ""
+        top_text = f"Top: {top_char}{score_top}"
+        bottom_text = f"Bottom: {bottom_char}{score_bottom}"
         
         draw_text_with_bg(heart_text, (10, y_offset), font_large)
         y_offset += 35

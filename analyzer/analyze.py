@@ -78,19 +78,21 @@ def analyze_single_image(image_path: str) -> Dict:
         TOP_RIGHT_REGION_TOP:TOP_RIGHT_REGION_BOTTOM,
         TOP_RIGHT_REGION_LEFT:TOP_RIGHT_REGION_RIGHT
     ]
-    top_char = recognize_character(top_region)
+    top_char, top_score = recognize_character(top_region)
     
     # 3. 右下アルファベット
     bottom_region = cv_image_rgb[
         BOTTOM_RIGHT_REGION_TOP:BOTTOM_RIGHT_REGION_BOTTOM,
         BOTTOM_RIGHT_REGION_LEFT:BOTTOM_RIGHT_REGION_RIGHT
     ]
-    bottom_char = recognize_character(bottom_region)
+    bottom_char, bottom_score = recognize_character(bottom_region)
     
     return {
         'heart_angle': heart_angle,
         'top_character': top_char,
-        'bottom_character': bottom_char
+        'bottom_character': bottom_char,
+        'top_score': top_score,
+        'bottom_score': bottom_score
     }
 
 
@@ -229,6 +231,8 @@ def process_directory(input_dir: str, output_dir: str,
                     result['heart_angle'],
                     result['top_character'],
                     result['bottom_character'],
+                    top_score=result.get('top_score'),
+                    bottom_score=result.get('bottom_score'),
                     ground_truth=ground_truth
                 )
                 
