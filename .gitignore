@@ -28,6 +28,7 @@ wheels/
 .venv/
 venv/
 ENV/
+*.code-workspace
 
 # IDE
 .vscode/
