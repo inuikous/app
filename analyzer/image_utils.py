@@ -17,7 +17,7 @@ from pathlib import Path
 _TEMPLATES_CACHE = None
 
 
-def load_templates(template_dir='analyzer/templates'):
+def load_templates(template_dir='templates'):
     """
     テンプレート画像を読み込んでキャッシュ
     

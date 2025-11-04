@@ -45,13 +45,15 @@ desktop.ini
 # Project specific
 debug/
 tests/
+test_results/
 output/
 outputs/
-test_results/
+analyzer/outputs/
+D-FINE_analyzer/outputs/
 templates
 
 # Dataset (comment out if you want to track it)
-dataset_generator/dataset/
+dataset/
 
 # Logs
 *.log

@@ -62,9 +62,8 @@
 
 ```bash
 python analyze.py \
-  --input ../dataset_generator/dataset \
-  --output ../output \
-  --ground-truth ../dataset_generator/dataset/labels.csv \
+  --input ../dataset \
+  --ground-truth ../dataset/labels.csv \
   --plot
 ```
 
@@ -72,17 +71,17 @@ python analyze.py \
 
 ```bash
 python visualize_accuracy.py \
-  --results ../output/analysis_results.csv \
-  --ground-truth ../dataset_generator/dataset/labels.csv \
-  --output ../output/graphs
+  --results outputs/analysis_results.csv \
+  --ground-truth ../dataset/labels.csv \
+  --output outputs/plots
 ```
 
 ### オプション
 
 ```
---results, -r FILE     解析結果のCSVファイル（デフォルト: ../output/analysis_results.csv）
---ground-truth, -g FILE 正解データのCSVファイル（デフォルト: ../dataset_generator/dataset/labels.csv）
---output, -o DIR       グラフ出力ディレクトリ（デフォルト: ../output/graphs）
+--results, -r FILE     解析結果のCSVファイル（デフォルト: outputs/analysis_results.csv）
+--ground-truth, -g FILE 正解データのCSVファイル（デフォルト: ../dataset/labels.csv）
+--output, -o DIR       グラフ出力ディレクトリ（デフォルト: outputs/plots）
 ```
 
 ## 出力される統計情報

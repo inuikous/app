@@ -45,7 +45,7 @@ brew install tesseract
 
 ```bash
 cd analyzer
-python analyze.py --input ../input --output ../output
+python analyze.py --input ../dataset_generator/dataset
 ```
 
 ### コマンドラインオプション
@@ -54,8 +54,8 @@ python analyze.py --input ../input --output ../output
 python analyze.py [オプション]
 
 オプション:
-  --input, -i DIR          入力ディレクトリ（デフォルト: ../input）
-  --output, -o DIR         出力ディレクトリ（デフォルト: ../output）
+  --input, -i DIR          入力ディレクトリ（デフォルト: デモモード）
+  --output, -o DIR         出力ディレクトリ（デフォルト: outputs）
   --no-save                画像を保存しない（解析結果のみ表示）
   --ground-truth, -g FILE  正解データのCSVファイル（精度評価用）
   --plot, -p               精度評価グラフを生成（--ground-truth必須）
@@ -66,20 +66,19 @@ python analyze.py [オプション]
 #### 1. 基本的な解析
 
 ```bash
-python analyze.py --input ../dataset_generator/dataset --output ../output
+python analyze.py --input ../dataset
 ```
 
 #### 2. 精度評価（正解データと比較）+ グラフ生成
 
 ```bash
 python analyze.py \
-  --input ../dataset_generator/dataset \
-  --output ../output \
-  --ground-truth ../dataset_generator/dataset/labels.csv \
+  --input ../dataset \
+  --ground-truth ../dataset/labels.csv \
   --plot
 ```
 
-グラフは`output/graphs/`に保存されます：
+グラフは`outputs/plots/`に保存されます：
 - `accuracy_summary.png` - 精度サマリー（4種類のグラフ）
 - `error_transition.png` - 画像ごとの誤差推移
 - `error_boxplot.png` - 誤差の統計分布
@@ -88,15 +87,15 @@ python analyze.py \
 
 ```bash
 python visualize_accuracy.py \
-  --results ../output/analysis_results.csv \
-  --ground-truth ../dataset_generator/dataset/labels.csv \
-  --output ../output/graphs
+  --results outputs/analysis_results.csv \
+  --ground-truth ../dataset/labels.csv \
+  --output outputs/plots
 ```
 
-#### 3. 解析のみ（画像保存なし）
+#### 4. 解析のみ（画像保存なし）
 
 ```bash
-python analyze.py --input ../input --no-save
+python analyze.py --input ../dataset --no-save
 ```
 
 ## ディレクトリ構造
@@ -121,7 +120,7 @@ analyzer/
 
 ### 2. CSV結果ファイル
 
-`output/analysis_results.csv`に以下の形式で保存されます：
+`outputs/analysis_results.csv`に以下の形式で保存されます：
 
 | フィールド | 説明 |
 |-----------|------|
@@ -141,7 +140,7 @@ analyzer/
 
 ### 4. グラフ（--plotオプション使用時）
 
-`output/graphs/`に以下のグラフが生成されます：
+`outputs/plots/`に以下のグラフが生成されます：
 
 #### accuracy_summary.png
 4つのグラフを含むサマリー：

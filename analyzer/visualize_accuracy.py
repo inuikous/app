@@ -313,13 +313,13 @@ def main():
     
     parser = argparse.ArgumentParser(description='精度評価グラフ生成')
     parser.add_argument('--results', '-r', 
-                       default='../output/analysis_results.csv',
+                       default='outputs/analysis_results.csv',
                        help='解析結果のCSVファイル')
     parser.add_argument('--ground-truth', '-g',
-                       default='../dataset_generator/dataset/labels.csv',
+                       default='../dataset/labels.csv',
                        help='正解データのCSVファイル')
     parser.add_argument('--output', '-o',
-                       default='../output/graphs',
+                       default='outputs/plots',
                        help='グラフ出力ディレクトリ')
     
     args = parser.parse_args()

@@ -12,10 +12,7 @@ from pathlib import Path
 import csv
 from typing import List, Dict
 
-# スクリプトとして実行される場合のための相対インポート対応
-if __name__ == '__main__':
-    # 親ディレクトリをパスに追加
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.chdir(os.path.dirname(__file__))
 
 try:
     from .image_utils import (
@@ -152,7 +149,7 @@ def process_directory(input_dir: str, output_dir: str,
     
     Args:
         input_dir: 入力ディレクトリ
-        output_dir: 出力ディレクトリ (outputs/images と outputs/plots を作成)
+        output_dir: 出力ディレクトリ (images と plots サブディレクトリを作成)
         save_results: 結果を保存するかどうか
         generate_plots: 精度グラフを生成するかどうか
     
@@ -359,13 +356,12 @@ def compare_with_ground_truth(results: List[Dict], ground_truth_path: str):
 def main():
     """
     メイン関数
-    引数なしで実行した場合はデモモードで動作
     """
     parser = argparse.ArgumentParser(description='画像解析システム')
-    parser.add_argument('--input', '-i', default=None,
-                       help='入力ディレクトリ（デフォルト: デモモード）')
-    parser.add_argument('--output', '-o', default='../outputs',
-                       help='出力ディレクトリ（デフォルト: ../outputs）')
+    parser.add_argument('--input', '-i', default='../dataset',
+                       help='入力ディレクトリ（デフォルト: ../dataset）')
+    parser.add_argument('--output', '-o', default='outputs',
+                       help='出力ディレクトリ（デフォルト: outputs）')
     parser.add_argument('--no-save', action='store_true',
                        help='画像を保存しない（解析のみ）')
     parser.add_argument('--no-plots', action='store_true',
@@ -377,58 +373,6 @@ def main():
     
     args = parser.parse_args()
     
-    # デモモード: 引数なしで実行された場合
-    if args.input is None:
-        print("="*60)
-        print("デモモード - データセットの最初の5枚を解析")
-        print("="*60)
-        
-        # データセットのパス
-        dataset_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset_generator', 'dataset')
-        
-        if not os.path.exists(dataset_dir):
-            print(f"\nエラー: データセットが見つかりません: {dataset_dir}")
-            print("先にデータセットを生成してください:")
-            print("  python dataset_generator/generate_dataset.py")
-            return
-        
-        # 最初の5枚を取得
-        image_files = sorted([f for f in os.listdir(dataset_dir) if f.endswith('.png')])[:5]
-        
-        if not image_files:
-            print(f"\nエラー: データセットに画像がありません: {dataset_dir}")
-            return
-        
-        print(f"\n{len(image_files)}枚の画像を解析します...\n")
-        
-        for i, filename in enumerate(image_files, 1):
-            # ファイル名から正解を取得
-            parts = filename.replace('.png', '').split('_')
-            true_heart = int(parts[2].replace('heart', ''))
-            true_top = parts[3].replace('top', '')[0]
-            true_bottom = parts[4].replace('bottom', '')[0]
-            
-            # 解析
-            image_path = os.path.join(dataset_dir, filename)
-            result = analyze_single_image(image_path)
-            
-            # 結果表示
-            print(f"[{i}] {filename}")
-            print(f"  Heart angle: {result['heart_angle']:.1f}deg (true: {true_heart}deg, error: {abs(result['heart_angle'] - true_heart):.1f}deg)")
-            print(f"  Top char: {result['top_character']} (true: {true_top}) {'✓' if result['top_character'] == true_top else '✗'}")
-            print(f"  Bottom char: {result['bottom_character']} (true: {true_bottom}) {'✓' if result['bottom_character'] == true_bottom else '✗'}")
-            print()
-        
-        print("="*60)
-        print("デモ完了！")
-        print("\nフルテストを実行する場合:")
-        print("  python tests/test_with_output.py")
-        print("\n混同行列を確認する場合:")
-        print("  python tests/analyze_confusion.py")
-        print("="*60)
-        return
-    
-    # 通常モード
     print("="*60)
     print("画像解析システム")
     print("="*60)
@@ -439,12 +383,10 @@ def main():
     print("="*60)
     print()
     
-    # ディレクトリを処理
     results = process_directory(args.input, args.output, 
                                save_results=not args.no_save,
                                generate_plots=not args.no_plots)
     
-    # 結果をCSVに保存
     if results and not args.no_save:
         csv_path = os.path.join(args.output, 'analysis_results.csv')
         save_results_csv(results, csv_path)

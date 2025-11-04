@@ -63,7 +63,7 @@ ALPHABET_CHOICES = ['A', 'B', 'C', 'D', 'E', 'F']  # 使用する文字
 #### データセット生成の設定
 ```python
 NUM_IMAGES = 100                   # 生成する画像枚数
-OUTPUT_DIR = 'dataset'             # 出力ディレクトリ
+OUTPUT_DIR = '../dataset'          # 出力ディレクトリ（プロジェクトルート）
 RANDOM_SEED = 42                   # ランダムシード（再現性）
 ```
 
@@ -71,7 +71,7 @@ RANDOM_SEED = 42                   # ランダムシード（再現性）
 
 ### 生成されるファイル
 
-実行すると、`dataset/`ディレクトリに以下のファイルが生成されます：
+実行すると、プロジェクトルートの`dataset/`ディレクトリに以下のファイルが生成されます：
 
 1. **画像ファイル**: `image_XXXX_heart{角度}_top{文字}{角度}_bottom{文字}{角度}.png`
    - 例: `image_0000_heart45_topA30_bottomB270.png`

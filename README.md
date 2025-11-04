@@ -25,17 +25,21 @@
 
 ```
 app/
-├── analyzer/              # 解析エンジン
+├── analyzer/              # 解析エンジン（テンプレートマッチング）
 │   ├── analyze.py        # メイン解析処理
-│   └── image_utils.py    # 画像処理関数
+│   ├── image_utils.py    # 画像処理関数
+│   ├── visualize_accuracy.py  # グラフ生成
+│   └── outputs/          # 解析結果の出力先
+│       ├── images/       # 解析済み画像
+│       ├── plots/        # 精度グラフ
+│       └── analysis_results.csv
+├── D-FINE_analyzer/       # D-FINE物体検出モデル（開発中）
 ├── dataset_generator/     # データセット生成
-│   ├── generate_dataset.py
-│   └── dataset/          # 生成された100画像
-├── debug/                 # デバッグ用スクリプト
-├── tests/                 # テスト用スクリプト
-├── test_results/          # テスト結果画像（100枚）
+│   └── generate_dataset.py
+├── dataset/               # 生成された100画像とラベル
+│   ├── image_*.png
+│   └── labels.csv
 └── README.md
-
 ```
 
 ## 使い方
@@ -45,34 +49,30 @@ app/
 ```cmd
 python -m venv .venv
 .venv\Scripts\activate
-pip install pillow opencv-python numpy
+cd analyzer
+pip install -r requirements.txt
 ```
 
-### 2. 単一画像の解析
-
-```python
-from analyzer.analyze import analyze_single_image
-
-result = analyze_single_image('path/to/image.png')
-print(result)
-# {'heart_angle': 327.1, 'top_character': 'A', 'bottom_character': 'F'}
-```
-
-### 3. テスト実行
+### 2. データセット生成
 
 ```cmd
-python tests\test_with_output.py
+cd dataset_generator
+python generate_dataset.py
 ```
 
-テスト結果は `test_results/` ディレクトリに保存されます。
+生成された100枚の画像とラベルは `dataset/` ディレクトリに保存されます。
 
-### 4. 混同行列の確認
+### 3. 画像解析の実行
 
 ```cmd
-python tests\analyze_confusion.py
+cd analyzer
+python analyze.py --input ../dataset --ground-truth ../dataset/labels.csv --plot
 ```
 
-どの文字がどの文字と混同されているか確認できます。
+解析結果は `analyzer/outputs/` に保存されます：
+- `outputs/images/` - 解析済み画像
+- `outputs/plots/` - 精度評価グラフ
+- `outputs/analysis_results.csv` - 解析結果CSV
 
 ## アルゴリズム
 
@@ -92,9 +92,9 @@ python tests\analyze_confusion.py
 
 ## データセット
 
-`dataset_generator/dataset/` に100枚の画像があります：
+`dataset/` に100枚の画像があります：
 - 白背景（255, 255, 255）
-- 黒いハート（左上）
+- 黒いハート（左下）
 - 黒い円2個（右上・右下）、円内に白い回転した文字（A-F）
 
 ファイル名: `image_XXXX_heartYYY_topZnn_bottomWmm.png`
@@ -105,12 +105,28 @@ python tests\analyze_confusion.py
 - W: 下部文字（A-F）
 - mm: 下部文字の回転角度（0-359°）
 
+## アプローチ
+
+### 1. テンプレートマッチング（現在実装済み）
+- `analyzer/` ディレクトリ
+- 回転不変な特徴量ベース
+- 軽量で高速
+
+### 2. D-FINE物体検出（開発中）
+- `D-FINE_analyzer/` ディレクトリ
+- ディープラーニングベースの高精度検出
+- トランスフォーマーモデル
+
 ## 今後の改善案
 
-- Cの認識精度向上（現在75%）
-- Aの穴検出の安定化
-- テンプレートマッチングの併用
-- ディープラーニング（CNN）の導入
+- **テンプレートマッチング**:
+  - Cの認識精度向上（現在75%）
+  - Aの穴検出の安定化
+  
+- **D-FINE導入**:
+  - COCO形式へのデータセット変換
+  - ファインチューニング実装
+  - エンドツーエンド検出システム
 
 ## ライセンス
 
