@@ -34,7 +34,7 @@ BOTTOM_X = 650
 BOTTOM_Y = 450
 
 # データセット
-NUM_IMAGES = 100
+NUM_IMAGES = 5000
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'dataset')
 RANDOM_SEED = 42
 

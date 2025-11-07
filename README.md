@@ -33,7 +33,18 @@ app/
 │       ├── images/       # 解析済み画像
 │       ├── plots/        # 精度グラフ
 │       └── analysis_results.csv
-├── D-FINE_analyzer/       # D-FINE物体検出モデル（開発中）
+├── D-FINE_analyzer/       # D-FINE物体検出モデル
+│   ├── convert_to_coco.py  # COCO形式変換
+│   ├── train.py           # モデル学習
+│   ├── inference.py       # 推論・解析
+│   ├── utils.py           # ユーティリティ
+│   ├── configs/           # 設定ファイル
+│   ├── checkpoints/       # 学習済みモデル
+│   ├── coco_dataset/      # COCO形式データ
+│   └── outputs/           # 解析結果
+│       ├── images/
+│       ├── plots/
+│       └── analysis_results.csv
 ├── dataset_generator/     # データセット生成
 │   └── generate_dataset.py
 ├── dataset/               # 生成された100画像とラベル
@@ -64,15 +75,32 @@ python generate_dataset.py
 
 ### 3. 画像解析の実行
 
+#### テンプレートマッチング手法
+
 ```cmd
 cd analyzer
 python analyze.py --input ../dataset --ground-truth ../dataset/labels.csv --plot
 ```
 
-解析結果は `analyzer/outputs/` に保存されます：
+解析結果は `analyzer/outputs/` に保存されます。
+
+#### D-FINE物体検出手法
+
+```cmd
+cd D-FINE_analyzer
+python run_pipeline.bat  # Windows
+# または手動で
+python convert_to_coco.py
+python train.py
+python inference.py --input ../dataset
+```
+
+解析結果は `D-FINE_analyzer/outputs/` に保存されます：
 - `outputs/images/` - 解析済み画像
 - `outputs/plots/` - 精度評価グラフ
 - `outputs/analysis_results.csv` - 解析結果CSV
+
+詳細は [D-FINE_analyzer/QUICKSTART.md](D-FINE_analyzer/QUICKSTART.md) を参照してください。
 
 ## アルゴリズム
 
@@ -107,15 +135,31 @@ python analyze.py --input ../dataset --ground-truth ../dataset/labels.csv --plot
 
 ## アプローチ
 
-### 1. テンプレートマッチング（現在実装済み）
-- `analyzer/` ディレクトリ
-- 回転不変な特徴量ベース
-- 軽量で高速
+### 1. テンプレートマッチング（実装済み）
+- **ディレクトリ**: `analyzer/`
+- **手法**: 回転不変な特徴量ベース
+- **特徴**: 軽量で高速、GPU不要
+- **精度**: 文字認識 91.5%
 
-### 2. D-FINE物体検出（開発中）
-- `D-FINE_analyzer/` ディレクトリ
-- ディープラーニングベースの高精度検出
-- トランスフォーマーモデル
+### 2. D-FINE物体検出（実装済み）
+- **ディレクトリ**: `D-FINE_analyzer/`
+- **手法**: ディープラーニングベースの物体検出
+- **モデル**: HuggingFace D-FINE（トランスフォーマー）
+- **特徴**: 
+  - エンドツーエンド学習
+  - COCO形式データセット対応
+  - GPU推奨
+  - より高精度な検出が期待できる
+
+### 手法の比較
+
+| 項目 | テンプレートマッチング | D-FINE物体検出 |
+|------|---------------------|----------------|
+| 学習時間 | 不要 | 約30-60分（GPU） |
+| 推論速度 | 高速（CPU可） | 中速（GPU推奨） |
+| 精度 | 91.5% | 学習次第で向上可能 |
+| GPU要件 | 不要 | 推奨（8GB+ VRAM） |
+| 実装難易度 | 低 | 中 |
 
 ## 今後の改善案
 
@@ -123,10 +167,18 @@ python analyze.py --input ../dataset --ground-truth ../dataset/labels.csv --plot
   - Cの認識精度向上（現在75%）
   - Aの穴検出の安定化
   
-- **D-FINE導入**:
-  - COCO形式へのデータセット変換
-  - ファインチューニング実装
-  - エンドツーエンド検出システム
+- **D-FINE**:
+  - ハート角度の回帰タスク追加
+  - データ拡張による精度向上
+  - より大規模なデータセットでの学習
+  - マルチタスク学習の実装
+
+## 関連ドキュメント
+
+- [analyzer/README.md](analyzer/README.md) - テンプレートマッチング詳細
+- [D-FINE_analyzer/README.md](D-FINE_analyzer/README.md) - D-FINE詳細
+- [D-FINE_analyzer/QUICKSTART.md](D-FINE_analyzer/QUICKSTART.md) - D-FINEクイックスタート
+- [dataset_generator/README.md](dataset_generator/README.md) - データセット生成
 
 ## ライセンス
 
