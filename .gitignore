@@ -48,6 +48,7 @@ tests/
 test_results/
 output/
 outputs/
+outputs_template/
 analyzer/outputs/
 D-FINE_analyzer/outputs/
 D-FINE_analyzer/coco_dataset/
