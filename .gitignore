@@ -57,6 +57,7 @@ templates
 
 # Dataset (comment out if you want to track it)
 dataset/
+test_dataset/
 
 # Logs
 *.log
