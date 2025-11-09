@@ -45,19 +45,28 @@ class DFINEInference:
         model_name = self.config.get('model', 'ustc-community/dfine-xlarge-coco')
         if isinstance(model_name, dict):
             model_name = model_name.get('name', 'ustc-community/dfine-xlarge-coco')
-        print(f"モデル読み込み中: {model_name}")
+        
+        # ローカルモデルを優先的に使用（オフライン対応）
+        local_model_path = "./pretrained_models/dfine-xlarge-coco"
+        if os.path.exists(local_model_path):
+            print(f"ローカルモデルを使用: {local_model_path}")
+            model_name_or_path = local_model_path
+        else:
+            print(f"オンラインからモデル読み込み: {model_name}")
+            print(f"  （オフライン使用には download_model.py を実行してください）")
+            model_name_or_path = model_name
         
         num_classes = 7
         if isinstance(self.config.get('model'), dict):
             num_classes = self.config['model'].get('num_classes', 7)
         
-        self.processor = AutoImageProcessor.from_pretrained(model_name)
+        self.processor = AutoImageProcessor.from_pretrained(model_name_or_path)
         
         if checkpoint_path and os.path.exists(checkpoint_path):
             print(f"チェックポイント読み込み: {checkpoint_path}")
             checkpoint = torch.load(checkpoint_path, map_location=self.device)
             self.model = AutoModelForObjectDetection.from_pretrained(
-                model_name,
+                model_name_or_path,
                 num_labels=num_classes,
                 ignore_mismatched_sizes=True
             )
@@ -67,7 +76,7 @@ class DFINEInference:
         else:
             print("チェックポイントなし（事前学習済みモデルを使用）")
             self.model = AutoModelForObjectDetection.from_pretrained(
-                model_name,
+                model_name_or_path,
                 num_labels=num_classes,
                 ignore_mismatched_sizes=True
             )

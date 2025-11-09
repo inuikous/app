@@ -116,15 +116,24 @@ class DFINETrainer:
         
         # モデルとプロセッサーを初期化
         model_name = config['model']['name']
-        print(f"モデル読み込み中: {model_name}")
         
-        self.processor = AutoImageProcessor.from_pretrained(model_name)
+        # ローカルモデルを優先的に使用（オフライン対応）
+        local_model_path = "./pretrained_models/dfine-xlarge-coco"
+        if os.path.exists(local_model_path):
+            print(f"ローカルモデルを使用: {local_model_path}")
+            model_name_or_path = local_model_path
+        else:
+            print(f"オンラインからモデル読み込み: {model_name}")
+            print(f"  （オフライン使用には download_model.py を実行してください）")
+            model_name_or_path = model_name
+        
+        self.processor = AutoImageProcessor.from_pretrained(model_name_or_path)
         
         print("モデルをロード中...")
         num_classes = config['model']['num_classes']
         
         self.model = AutoModelForObjectDetection.from_pretrained(
-            model_name,
+            model_name_or_path,
             num_labels=num_classes,
             ignore_mismatched_sizes=True
         )
