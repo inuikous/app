@@ -143,7 +143,7 @@ def detect_heart_angle(image_region):
     else:
         gray = image_region
     
-    # 最小限の前処理: 塩コショウノイズ除去のみ
+    # 最小限の前処理
     processed = cv2.medianBlur(gray, 3)
     
     # 適応的二値化
@@ -227,7 +227,7 @@ def recognize_character(image_region):
     else:
         gray = image_region
     
-    # 最小限の前処理: 塩コショウノイズ除去のみ
+    # 最小限の前処理
     processed = cv2.medianBlur(gray, 3)
     
     # 円領域の抽出（エッジ検出ベース）
@@ -270,14 +270,20 @@ def recognize_character(image_region):
     else:
         return ('Unknown', 0.0)
     
-    # テンプレートマッチング
+    # 正規化マッチング
     best_match = None
     best_score = 0
     
+    # 文字を正規化
+    char_norm = cv2.normalize(char_resized, None, 0, 255, cv2.NORM_MINMAX)
+    
     for char, template_list in templates.items():
         for angle, template in template_list:
+            # テンプレートを正規化
+            template_norm = cv2.normalize(template, None, 0, 255, cv2.NORM_MINMAX)
+            
             # 正規化相互相関でマッチング
-            result = cv2.matchTemplate(char_resized, template, cv2.TM_CCOEFF_NORMED)
+            result = cv2.matchTemplate(char_norm, template_norm, cv2.TM_CCOEFF_NORMED)
             _, max_val, _, _ = cv2.minMaxLoc(result)
             
             if max_val > best_score:
@@ -285,7 +291,7 @@ def recognize_character(image_region):
                 best_match = char
     
     # スコアが低すぎる場合は Unknown
-    if best_score < 0.5:  # 閾値を引き上げて誤認識を防ぐ
+    if best_score < 0.3:
         return ('Unknown', best_score)
     
     return (best_match, best_score)

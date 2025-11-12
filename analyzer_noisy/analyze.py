@@ -170,7 +170,7 @@ def analyze_single_image(image_path, ground_truth=None, save_visualization=False
 
 
 def analyze_dataset(dataset_dir='dataset_noisy', output_dir='analyzer_noisy/outputs', 
-                   save_images=False, max_images=None):
+                   save_images=True, max_images=None):
     """
     データセット全体を解析
     
@@ -284,7 +284,7 @@ def main():
                        help='データセットディレクトリ')
     parser.add_argument('--output', type=str, default='outputs',
                        help='結果出力ディレクトリ')
-    parser.add_argument('--save-images', action='store_true',
+    parser.add_argument('--save-images', action='store_false',
                        help='可視化画像を保存')
     parser.add_argument('--max-images', type=int, default=None,
                        help='処理する最大画像数')
