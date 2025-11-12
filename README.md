@@ -93,6 +93,24 @@ python generate_test_dataset.py
 
 生成された500枚の画像とラベルは `test_dataset/` ディレクトリに保存されます。
 
+#### ノイズ付きデータ（1000枚、ロバスト性テスト用）
+
+```cmd
+cd dataset_generator
+python generate_dataset_with_noise.py
+```
+
+生成された1000枚のノイズ付き画像とラベルは `dataset_noisy/` ディレクトリに保存されます。
+
+**ノイズの種類（全12種類）**:
+- **ピクセルレベル**: ガウシアンノイズ、塩コショウノイズ、ぼかし
+- **明度・色調**: 明るさ調整、コントラスト調整、彩度調整、ガンマ補正
+- **配置誤差**: 回転のズレ、位置のズレ
+- **照明効果**: 影効果、ビネット効果
+- **背景**: 背景ノイズ（ランダムなスポット）
+
+詳細は [dataset_generator/NOISE_GUIDE.md](dataset_generator/NOISE_GUIDE.md) を参照してください。
+
 ### 3. 画像解析の実行
 
 #### テンプレートマッチング手法

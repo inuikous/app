@@ -59,6 +59,7 @@ templates
 
 # Dataset (comment out if you want to track it)
 dataset/
+dataset_noisy/
 test_dataset/
 
 # Logs

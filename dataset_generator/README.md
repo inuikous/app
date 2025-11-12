@@ -13,10 +13,13 @@
 
 ```
 dataset_generator/
-├── config.py              # 設定ファイル
-├── generate_dataset.py    # メインスクリプト
-├── README.md             # このファイル
-└── requirements.txt      # 依存パッケージ
+├── generate_dataset.py              # クリーンデータ生成（1000枚）
+├── generate_test_dataset.py         # テストデータ生成（500枚）
+├── generate_dataset_with_noise.py   # ノイズ付きデータ生成（1000枚）
+├── noise_config.yaml                # ノイズ設定ファイル
+├── NOISE_GUIDE.md                   # ノイズ機能の詳細ガイド
+├── README.md                        # このファイル
+└── requirements.txt                 # 依存パッケージ
 ```
 
 ## インストール
@@ -29,12 +32,32 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 基本的な使い方
+### 1. クリーンデータ生成（学習用）
 
 ```bash
 cd dataset_generator
 python generate_dataset.py
 ```
+
+**出力**: `dataset/` に1000枚の画像
+
+### 2. テストデータ生成（評価用）
+
+```bash
+python generate_test_dataset.py
+```
+
+**出力**: `test_dataset/` に500枚の画像（異なるシード値）
+
+### 3. ノイズ付きデータ生成（ロバスト性テスト用）
+
+```bash
+python generate_dataset_with_noise.py
+```
+
+**出力**: `dataset_noisy/` に1000枚のノイズ付き画像
+
+詳細は [NOISE_GUIDE.md](NOISE_GUIDE.md) を参照してください。
 
 ### 設定のカスタマイズ
 
@@ -110,6 +133,26 @@ RANDOM_SEED = 42                   # ランダムシード（再現性）
 3. **白い文字**: 円の中の文字は白色
 4. **ランダムな角度**: すべての要素がランダムな角度で回転
 
+## データセット比較
+
+| 種類 | スクリプト | 出力先 | 枚数 | シード | 用途 |
+|------|-----------|--------|------|--------|------|
+| 学習用 | `generate_dataset.py` | `dataset/` | 1000 | 42 | モデル学習 |
+| テスト用 | `generate_test_dataset.py` | `test_dataset/` | 500 | 12345 | 精度評価 |
+| ノイズ付き | `generate_dataset_with_noise.py` | `dataset_noisy/` | 1000 | 42 | ロバスト性テスト |
+
+## ノイズの種類（generate_dataset_with_noise.py）
+
+1. **ガウシアンノイズ**: ランダムなピクセル値の変動
+2. **塩コショウノイズ**: ランダムな白黒ドット
+3. **ぼかし**: 画像全体のぼかし
+4. **明るさ調整**: 明るさのランダム変更
+5. **回転のズレ**: ハート・文字角度の微小なズレ
+6. **位置のズレ**: 要素位置の微小なズレ
+7. **背景ノイズ**: 背景にランダムなスポット
+
+詳細は [NOISE_GUIDE.md](NOISE_GUIDE.md) を参照してください。
+
 ## トラブルシューティング
 
 ### フォントエラーが発生する場合
@@ -120,6 +163,12 @@ Windowsの場合、`arial.ttf`が見つからない場合はデフォルトフ�
 ### メモリエラーが発生する場合
 
 `NUM_IMAGES`の値を減らして、少ない枚数から試してください。
+
+### ノイズ付きデータでnumpyエラーが出る場合
+
+```bash
+pip install numpy
+```
 
 ## カスタマイズ例
 
