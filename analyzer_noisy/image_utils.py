@@ -12,10 +12,55 @@ import matplotlib
 matplotlib.use('Agg')  # GUIなしでプロット生成
 import os
 from pathlib import Path
+from preprocessing import apply_preprocessing_pipeline
 
 
 # テンプレートマッチング用のグローバルキャッシュ
 _TEMPLATES_CACHE = None
+_TEMPLATES_CACHE_PREPROCESSED = {}  # 前処理済みテンプレートキャッシュ
+
+# 前処理パイプライン設定（グローバル）
+_PREPROCESSING_PIPELINE = ['median_3']  # デフォルト
+
+# デバッグモード設定（グローバル）
+_DEBUG_MODE = False
+_DEBUG_DIR = None
+
+
+def set_preprocessing_pipeline(pipeline):
+    """
+    前処理パイプラインを設定
+    
+    Args:
+        pipeline: 前処理手法のリスト ["median_3", "clahe", ...]
+    """
+    global _PREPROCESSING_PIPELINE, _TEMPLATES_CACHE_PREPROCESSED
+    _PREPROCESSING_PIPELINE = pipeline
+    # 前処理済みテンプレートキャッシュをクリア
+    _TEMPLATES_CACHE_PREPROCESSED = {}
+    print(f"前処理パイプラインを設定: {pipeline}")
+
+
+def get_preprocessing_pipeline():
+    """現在の前処理パイプラインを取得"""
+    return _PREPROCESSING_PIPELINE
+
+
+def set_debug_mode(enabled, debug_dir=None):
+    """
+    デバッグモードを設定（前処理の各段階を保存）
+    
+    Args:
+        enabled: デバッグモードを有効にするか
+        debug_dir: デバッグ画像の保存先ディレクトリ
+    """
+    global _DEBUG_MODE, _DEBUG_DIR
+    _DEBUG_MODE = enabled
+    _DEBUG_DIR = debug_dir
+    if enabled:
+        print(f"デバッグモード有効: {debug_dir}")
+    else:
+        print("デバッグモード無効")
 
 
 def load_templates(template_dir='templates'):
@@ -58,6 +103,44 @@ def load_templates(template_dir='templates'):
     print(f"✓ テンプレート読み込み完了: {sum(len(v) for v in templates.values())} 個")
     
     return templates
+
+
+def get_preprocessed_templates():
+    """
+    前処理済みテンプレートを取得（キャッシュ付き）
+    
+    Returns:
+        dict: {文字: [(角度, 前処理済みテンプレート画像), ...], ...}
+    """
+    global _TEMPLATES_CACHE_PREPROCESSED
+    
+    # 現在のパイプラインのキャッシュキー
+    pipeline_key = tuple(_PREPROCESSING_PIPELINE)
+    
+    if pipeline_key in _TEMPLATES_CACHE_PREPROCESSED:
+        return _TEMPLATES_CACHE_PREPROCESSED[pipeline_key]
+    
+    # 元のテンプレートを読み込み
+    templates = load_templates()
+    
+    if not templates:
+        return {}
+    
+    # 前処理を適用
+    preprocessed_templates = {}
+    for char, template_list in templates.items():
+        preprocessed_templates[char] = []
+        for angle, template in template_list:
+            # 前処理パイプラインを適用
+            preprocessed = apply_preprocessing_pipeline(template, _PREPROCESSING_PIPELINE)
+            preprocessed_templates[char].append((angle, preprocessed))
+    
+    # キャッシュに保存
+    _TEMPLATES_CACHE_PREPROCESSED[pipeline_key] = preprocessed_templates
+    
+    print(f"✓ テンプレートに前処理適用: {_PREPROCESSING_PIPELINE}")
+    
+    return preprocessed_templates
 
 
 def preprocess_for_noise(image, noise_type='auto'):
@@ -129,7 +212,7 @@ def normalize_illumination(image):
 
 def detect_heart_angle(image_region):
     """
-    ハートの角度を検出（ノイズ対応強化版）
+    ハートの角度を検出（ノイズ対応強化版 - 前処理最小化）
     
     Args:
         image_region: ハート領域の画像（NumPy配列、RGB）
@@ -143,19 +226,17 @@ def detect_heart_angle(image_region):
     else:
         gray = image_region
     
-    # 最小限の前処理
-    processed = cv2.medianBlur(gray, 3)
+    # 前処理パイプラインを適用（デバッグモードでは各段階を保存）
+    debug_dir = _DEBUG_DIR if _DEBUG_MODE else None
+    processed = apply_preprocessing_pipeline(gray, _PREPROCESSING_PIPELINE,
+                                            debug_dir=debug_dir,
+                                            filename_prefix="heart")
     
     # 適応的二値化
     binary = cv2.adaptiveThreshold(
         processed, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV, 21, 5
     )
-    
-    # モルフォロジー処理でノイズ除去
-    kernel = np.ones((3,3), np.uint8)
-    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
-    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
     
     # 輪郭検出
     contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -207,7 +288,7 @@ def detect_heart_angle(image_region):
 
 def recognize_character(image_region):
     """
-    円内の文字を認識（テンプレートマッチング版、ノイズ対応強化）
+    円内の文字を認識（テンプレートマッチング版、ノイズ対応強化 - 前処理最小化）
     
     Args:
         image_region: 円領域の画像（NumPy配列、RGB）
@@ -227,19 +308,18 @@ def recognize_character(image_region):
     else:
         gray = image_region
     
-    # 最小限の前処理
-    processed = cv2.medianBlur(gray, 3)
+    # 前処理パイプラインを適用（デバッグモードでは各段階を保存）
+    debug_dir = _DEBUG_DIR if _DEBUG_MODE else None
+    processed = apply_preprocessing_pipeline(gray, _PREPROCESSING_PIPELINE, 
+                                            debug_dir=debug_dir, 
+                                            filename_prefix="char")
     
-    # 円領域の抽出（エッジ検出ベース）
+    # 円領域の抽出（二値化）
     # 適応的二値化
     binary = cv2.adaptiveThreshold(
         processed, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV, 21, 5
     )
-    
-    # モルフォロジー処理
-    kernel = np.ones((3,3), np.uint8)
-    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
     
     # 輪郭検出
     contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -270,14 +350,17 @@ def recognize_character(image_region):
     else:
         return ('Unknown', 0.0)
     
-    # 正規化マッチング
+    # 正規化マッチング（前処理済みテンプレートを使用）
     best_match = None
     best_score = 0
     
     # 文字を正規化
     char_norm = cv2.normalize(char_resized, None, 0, 255, cv2.NORM_MINMAX)
     
-    for char, template_list in templates.items():
+    # 前処理済みテンプレートを取得
+    preprocessed_templates = get_preprocessed_templates()
+    
+    for char, template_list in preprocessed_templates.items():
         for angle, template in template_list:
             # テンプレートを正規化
             template_norm = cv2.normalize(template, None, 0, 255, cv2.NORM_MINMAX)
@@ -290,8 +373,8 @@ def recognize_character(image_region):
                 best_score = max_val
                 best_match = char
     
-    # スコアが低すぎる場合は Unknown
-    if best_score < 0.3:
+    # スコアが低すぎる場合は Unknown（ノイズ対応で閾値を下げる）
+    if best_score < 0.25:
         return ('Unknown', best_score)
     
     return (best_match, best_score)

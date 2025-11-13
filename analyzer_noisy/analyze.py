@@ -24,7 +24,9 @@ from image_utils import (
     recognize_character,
     draw_results_on_image,
     generate_accuracy_plots,
-    load_templates
+    load_templates,
+    set_preprocessing_pipeline,
+    set_debug_mode
 )
 
 
@@ -115,6 +117,28 @@ def analyze_single_image(image_path, ground_truth=None, save_visualization=False
         img_array = cv2.cvtColor(img_array, cv2.COLOR_GRAY2RGB)
     elif img_array.shape[2] == 4:
         img_array = cv2.cvtColor(img_array, cv2.COLOR_RGBA2RGB)
+    
+    # デバッグモード: 画像全体に前処理を適用して保存
+    from image_utils import _DEBUG_MODE, _DEBUG_DIR, _PREPROCESSING_PIPELINE
+    from preprocessing import apply_preprocessing_pipeline
+    if _DEBUG_MODE and _DEBUG_DIR:
+        # グレースケール変換
+        if len(img_array.shape) == 3:
+            gray_full = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        else:
+            gray_full = img_array
+        
+        # 画像ファイル名から識別子を作成
+        import os
+        base_name = os.path.splitext(os.path.basename(image_path))[0]
+        
+        # 前処理パイプラインを適用（デバッグモードで各段階を保存）
+        apply_preprocessing_pipeline(
+            gray_full, 
+            _PREPROCESSING_PIPELINE,
+            debug_dir=_DEBUG_DIR,
+            filename_prefix=f"fullimage_{base_name}"
+        )
     
     results = {}
     
@@ -278,6 +302,7 @@ def analyze_dataset(dataset_dir='dataset_noisy', output_dir='analyzer_noisy/outp
 def main():
     """メイン関数"""
     import argparse
+    from preprocessing import get_available_methods, get_recommended_pipelines
     
     parser = argparse.ArgumentParser(description='ノイズデータセット解析プログラム')
     parser.add_argument('--dataset', type=str, default='../dataset_noisy',
@@ -288,8 +313,47 @@ def main():
                        help='可視化画像を保存')
     parser.add_argument('--max-images', type=int, default=None,
                        help='処理する最大画像数')
+    parser.add_argument('--pipeline', nargs='+', default=['median_3'],
+                       help='前処理パイプライン（例: median_3 clahe sharpen）')
+    parser.add_argument('--list-methods', action='store_true',
+                       help='利用可能な前処理手法一覧を表示')
+    parser.add_argument('--list-pipelines', action='store_true',
+                       help='推奨パイプライン一覧を表示')
+    parser.add_argument('--debug-preprocessing', type=str, default=None,
+                       help='前処理デバッグモード: 各段階の画像を保存するディレクトリ')
     
     args = parser.parse_args()
+    
+    # 前処理手法一覧を表示
+    if args.list_methods:
+        print("\n利用可能な前処理手法:")
+        print("="*60)
+        for method in get_available_methods():
+            print(f"  - {method}")
+        print("="*60)
+        return
+    
+    # 推奨パイプライン一覧を表示
+    if args.list_pipelines:
+        print("\n推奨パイプライン一覧:")
+        print("="*60)
+        pipelines = get_recommended_pipelines()
+        for name, methods in pipelines.items():
+            print(f"\n{name}:")
+            print(f"  {' -> '.join(methods)}")
+        print("="*60)
+        return
+    
+    # 前処理パイプラインを設定
+    set_preprocessing_pipeline(args.pipeline)
+    print(f"\n前処理パイプライン: {' -> '.join(args.pipeline)}")
+    
+    # デバッグモードの設定
+    if args.debug_preprocessing:
+        import os
+        os.makedirs(args.debug_preprocessing, exist_ok=True)
+        set_debug_mode(True, args.debug_preprocessing)
+        print(f"デバッグモード有効: 前処理画像を {args.debug_preprocessing} に保存します")
     
     # 解析実行
     df = analyze_dataset(
