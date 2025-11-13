@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TEMPLATE_MATCHING_GUIDE.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="%E3%83%8E%E3%82%A4%E3%82%BA%E6%9C%89%E3%82%8A%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%88%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0%E6%89%8B%E6%B3%95">ノイズ有りデータセットにおけるテンプレートマッチング手法</h1>
+<h2 id="%E6%A6%82%E8%A6%81">概要</h2>
+<p>本ドキュメントでは、12種類のノイズを含むデータセットに対して高精度なテンプレートマッチングを実現した手法と工夫点を記録する。</p>
+<p><img src="asset/01_original_example.png" alt="元画像">
+<em>処理対象の元画像例</em></p>
+<h2 id="%E9%81%94%E6%88%90%E7%B2%BE%E5%BA%A6">達成精度</h2>
+<ul>
+<li><strong>文字認識精度</strong>: 100% (右上・右下両方)</li>
+<li><strong>ハート角度検出</strong>: 平均誤差 3.32°（最大誤差 8.00°、標準偏差 2.23°）</li>
+<li><strong>対象データセット</strong>: 12種類のノイズを含む1000枚の画像</li>
+</ul>
+<h2 id="%E3%83%8E%E3%82%A4%E3%82%BA%E3%81%AE%E7%A8%AE%E9%A1%9E">ノイズの種類</h2>
+<p>以下の12種類のノイズに対して頑健性を実現：</p>
+<ol>
+<li>gaussian（ガウシアンノイズ）</li>
+<li>salt_pepper（ゴマ塩ノイズ）</li>
+<li>blur（ぼかし）</li>
+<li>brightness（明度変化）</li>
+<li>rotation_jitter（回転ジッター）</li>
+<li>position_jitter（位置ジッター）</li>
+<li>background_noise（背景ノイズ）</li>
+<li>contrast（コントラスト変化）</li>
+<li>saturation（彩度変化）</li>
+<li>gamma（ガンマ補正）</li>
+<li>shadow（影）</li>
+<li>vignette（ビネット効果）</li>
+</ol>
+<h2 id="%E6%A0%B8%E5%BF%83%E6%8A%80%E8%A1%93">核心技術</h2>
+<h3 id="1-otsu%E3%81%AE%E8%87%AA%E5%8B%95%E4%BA%8C%E5%80%A4%E5%8C%96%E3%81%AB%E3%82%88%E3%82%8B%E9%A0%98%E5%9F%9F%E7%8B%AC%E7%AB%8B%E6%A4%9C%E5%87%BA">1. Otsuの自動二値化による領域独立検出</h3>
+<p><img src="asset/13_threshold_comparison.png" alt="閾値手法の比較">
+<em>左: 適応的閾値処理、右: Otsuの自動二値化</em></p>
+<p><strong>従来手法の課題</strong>:</p>
+<ul>
+<li>適応的閾値処理では固定ブロックサイズを使用</li>
+<li>検出領域のサイズに依存し、頑健性が不足</li>
+<li>初期実装では平均角度誤差が88.34°と精度不良</li>
+</ul>
+<p><strong>改善手法</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># Otsuの自動閾値処理</span>
+_, binary = cv2.threshold(processed, <span class="hljs-number">0</span>, <span class="hljs-number">255</span>, 
+                         cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+</div></code></pre>
+<p><strong>効果</strong>:</p>
+<ul>
+<li>画像の統計情報から最適な閾値を自動計算</li>
+<li>検出領域のサイズに依存しない頑健な検出</li>
+<li>角度誤差を88.34° → 3.32°に改善（96%削減）</li>
+</ul>
+<p><strong>原理</strong>:
+Otsuの手法は画像のヒストグラムを解析し、クラス間分散を最大化する閾値を自動的に選択する。これにより、様々なノイズや明度条件下でも適切な二値化が可能となる。</p>
+<h3 id="2-%E6%AD%A3%E8%A6%8F%E5%8C%96%E7%9B%B8%E4%BA%92%E7%9B%B8%E9%96%A2%E3%81%AB%E3%82%88%E3%82%8B%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0">2. 正規化相互相関によるテンプレートマッチング</h3>
+<p><strong>手法</strong>:</p>
+<pre class="hljs"><code><div>result = cv2.matchTemplate(binary, template, cv2.TM_CCORR_NORMED)
+</div></code></pre>
+<p><strong>パラメータ</strong>:</p>
+<ul>
+<li>マッチング手法: <code>TM_CCORR_NORMED</code>（正規化相互相関）</li>
+<li>閾値: 0.15（経験的に最適化）</li>
+</ul>
+<p><img src="asset/11_matching_heatmap_example.png" alt="マッチングヒートマップ">
+<em>テンプレートマッチングのヒートマップ（赤が高スコア）</em></p>
+<p><img src="asset/12_matching_result_example.png" alt="マッチング結果">
+<em>検出されたハート角度と位置</em></p>
+<p><strong>利点</strong>:</p>
+<ul>
+<li>明度変化に対して頑健</li>
+<li>正規化により異なるコントラストでも安定</li>
+<li>ノイズの影響を受けにくい</li>
+</ul>
+<h3 id="3-%E5%89%8D%E5%87%A6%E7%90%86%E3%83%91%E3%82%A4%E3%83%97%E3%83%A9%E3%82%A4%E3%83%B3">3. 前処理パイプライン</h3>
+<p><strong>採用手法</strong>: メディアンフィルタ（カーネルサイズ3）</p>
+<pre class="hljs"><code><div>processed = cv2.medianBlur(region, <span class="hljs-number">3</span>)
+</div></code></pre>
+<p><img src="asset/02_heart_region_example.png" alt="前処理の流れ">
+<em>ハート領域の切り出し</em></p>
+<p><img src="asset/03_grayscale_example.png" alt="グレースケール変換">
+<em>グレースケール変換</em></p>
+<p><img src="asset/04_median_filter_example.png" alt="メディアンフィルタ">
+<em>メディアンフィルタ適用後</em></p>
+<p><strong>効果</strong>:</p>
+<ul>
+<li>ゴマ塩ノイズの効果的な除去</li>
+<li>エッジ保存性が高い</li>
+<li>計算コストが低い</li>
+</ul>
+<p><strong>選定理由</strong>:
+30種類以上の前処理手法を比較検証した結果、メディアンフィルタ（カーネル3）が以下の点で最適と判断：</p>
+<ul>
+<li>ノイズ除去効果が高い</li>
+<li>エッジ情報を保持</li>
+<li>過度な平滑化を避け、特徴量を維持</li>
+</ul>
+<h3 id="4-%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E7%94%9F%E6%88%90%E3%81%AE%E6%9C%80%E9%81%A9%E5%8C%96">4. テンプレート生成の最適化</h3>
+<p><strong>文字テンプレート</strong>:</p>
+<ul>
+<li>サイズ: 200×200ピクセル</li>
+<li>形式: 白背景 + 黒円 + 白文字</li>
+<li>対象: 数字0-9、アルファベットA-Z</li>
+</ul>
+<p><img src="asset/10_char_templates_examples.png" alt="文字テンプレート例">
+<em>文字テンプレート例（A-F、0度）</em></p>
+<p><strong>ハートテンプレート</strong>:</p>
+<ul>
+<li>サイズ: 240×240ピクセル</li>
+<li>角度範囲: 0°〜350°（10°刻み、計36枚）</li>
+<li>形式: 白背景 + 黒ハート形状</li>
+</ul>
+<p><img src="asset/09_heart_templates_examples.png" alt="ハートテンプレート例">
+<em>ハートテンプレート例（0°, 90°, 180°, 270°）</em></p>
+<p><strong>重要なポイント</strong>:</p>
+<ul>
+<li>テンプレートサイズと検出領域サイズの整合性</li>
+<li>適切な色反転処理（入力画像との整合）</li>
+</ul>
+<h3 id="5-%E7%94%BB%E5%83%8F%E5%89%8D%E5%87%A6%E7%90%86%E3%81%AE%E7%B5%B1%E4%B8%80">5. 画像前処理の統一</h3>
+<p><strong>文字認識</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># 画像反転により背景を統一</span>
+inverted = <span class="hljs-number">255</span> - region
+<span class="hljs-comment"># 適応的二値化</span>
+binary = cv2.adaptiveThreshold(inverted, <span class="hljs-number">255</span>, 
+                               cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                               cv2.THRESH_BINARY, <span class="hljs-number">11</span>, <span class="hljs-number">2</span>)
+</div></code></pre>
+<p><img src="asset/06_char_region_example.png" alt="文字領域">
+<em>文字領域の切り出し</em></p>
+<p><img src="asset/07_char_inverted_example.png" alt="文字反転">
+<em>画像反転処理</em></p>
+<p><img src="asset/08_char_binary_example.png" alt="文字二値化">
+<em>適応的二値化後</em></p>
+<p><strong>ハート検出</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># メディアンフィルタでノイズ除去</span>
+processed = cv2.medianBlur(region, <span class="hljs-number">3</span>)
+<span class="hljs-comment"># Otsuの自動二値化</span>
+_, binary = cv2.threshold(processed, <span class="hljs-number">0</span>, <span class="hljs-number">255</span>,
+                         cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+</div></code></pre>
+<p><img src="asset/05_otsu_binary_example.png" alt="Otsu二値化">
+<em>Otsuの二値化結果</em></p>
+<h2 id="%E5%87%A6%E7%90%86%E3%83%95%E3%83%AD%E3%83%BC%E5%85%A8%E4%BD%93%E5%83%8F">処理フロー全体像</h2>
+<h3 id="%E3%83%8F%E3%83%BC%E3%83%88%E8%A7%92%E5%BA%A6%E6%A4%9C%E5%87%BA%E3%81%AE%E6%B5%81%E3%82%8C">ハート角度検出の流れ</h3>
+<ol>
+<li><strong>元画像読み込み</strong> → <a href="asset/01_original_example.png">01_original_example.png</a></li>
+<li><strong>ハート領域切り出し</strong> (240×240) → <a href="asset/02_heart_region_example.png">02_heart_region_example.png</a></li>
+<li><strong>グレースケール変換</strong> → <a href="asset/03_grayscale_example.png">03_grayscale_example.png</a></li>
+<li><strong>メディアンフィルタ適用</strong> (カーネル3) → <a href="asset/04_median_filter_example.png">04_median_filter_example.png</a></li>
+<li><strong>Otsuの二値化</strong> → <a href="asset/05_otsu_binary_example.png">05_otsu_binary_example.png</a></li>
+<li><strong>36個のテンプレートとマッチング</strong> → <a href="asset/11_matching_heatmap_example.png">11_matching_heatmap_example.png</a></li>
+<li><strong>最高スコアの角度を検出</strong> → <a href="asset/12_matching_result_example.png">12_matching_result_example.png</a></li>
+</ol>
+<h3 id="%E6%96%87%E5%AD%97%E8%AA%8D%E8%AD%98%E3%81%AE%E6%B5%81%E3%82%8C">文字認識の流れ</h3>
+<ol>
+<li><strong>元画像読み込み</strong> → <a href="asset/01_original_example.png">01_original_example.png</a></li>
+<li><strong>文字領域切り出し</strong> (220×220) → <a href="asset/06_char_region_example.png">06_char_region_example.png</a></li>
+<li><strong>画像反転処理</strong> → <a href="asset/07_char_inverted_example.png">07_char_inverted_example.png</a></li>
+<li><strong>適応的二値化</strong> → <a href="asset/08_char_binary_example.png">08_char_binary_example.png</a></li>
+<li><strong>文字テンプレートとマッチング</strong> → <a href="asset/10_char_templates_examples.png">10_char_templates_examples.png</a></li>
+<li><strong>最高スコアの文字を認識</strong></li>
+</ol>
+<h2 id="%E6%A4%9C%E5%87%BA%E9%A0%98%E5%9F%9F%E3%81%AE%E5%AE%9A%E7%BE%A9">検出領域の定義</h2>
+<p>領域の正確な定義が精度向上の鍵：</p>
+<pre class="hljs"><code><div>HEART_REGION = (<span class="hljs-number">80</span>, <span class="hljs-number">280</span>, <span class="hljs-number">320</span>, <span class="hljs-number">520</span>)      <span class="hljs-comment"># 240×240ピクセル</span>
+TOP_RIGHT = (<span class="hljs-number">540</span>, <span class="hljs-number">40</span>, <span class="hljs-number">760</span>, <span class="hljs-number">260</span>)         <span class="hljs-comment"># 220×220ピクセル（右上文字）</span>
+BOTTOM_RIGHT = (<span class="hljs-number">540</span>, <span class="hljs-number">340</span>, <span class="hljs-number">760</span>, <span class="hljs-number">560</span>)     <span class="hljs-comment"># 220×220ピクセル（右下文字）</span>
+</div></code></pre>
+<h2 id="%E3%83%88%E3%83%A9%E3%83%96%E3%83%AB%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E5%B1%A5%E6%AD%B4">トラブルシューティング履歴</h2>
+<h3 id="%E5%95%8F%E9%A1%8C1-%E6%96%87%E5%AD%97%E8%AA%8D%E8%AD%98%E7%B2%BE%E5%BA%A6%E3%81%8C19-22">問題1: 文字認識精度が19-22%</h3>
+<p><strong>原因</strong>:</p>
+<ol>
+<li>テンプレートサイズの不一致（60px vs 200px必要）</li>
+<li>画像反転の不備</li>
+<li>閾値が高すぎる（0.25）</li>
+</ol>
+<p><strong>解決策</strong>:</p>
+<ol>
+<li>テンプレートを200×200に統一</li>
+<li>画像反転処理を追加（<code>255 - image</code>）</li>
+<li>閾値を0.15に低減</li>
+</ol>
+<p><strong>結果</strong>: 精度が100%に改善</p>
+<h3 id="%E5%95%8F%E9%A1%8C2-%E3%83%8F%E3%83%BC%E3%83%88%E8%A7%92%E5%BA%A6%E8%AA%A4%E5%B7%AE%E3%81%8C72-88%C2%B0">問題2: ハート角度誤差が72-88°</h3>
+<p><strong>原因</strong>:</p>
+<ul>
+<li>適応的閾値処理の固定ブロックサイズが領域サイズに不適合</li>
+</ul>
+<p><strong>解決策</strong>:</p>
+<ul>
+<li>Otsuの自動二値化を採用</li>
+</ul>
+<p><strong>結果</strong>: 角度誤差が3.32°に劇的改善</p>
+<h3 id="%E5%95%8F%E9%A1%8C3-%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E3%82%B5%E3%82%A4%E3%82%BA%E3%81%AE%E4%B8%8D%E6%95%B4%E5%90%88">問題3: テンプレートサイズの不整合</h3>
+<p><strong>原因</strong>:</p>
+<ul>
+<li>ハートテンプレートが300×300で生成（240×240が正しい）</li>
+</ul>
+<p><strong>解決策</strong>:</p>
+<ul>
+<li>テンプレート生成スクリプトを修正して再生成</li>
+</ul>
+<p><strong>結果</strong>: マッチング精度の向上</p>
+<h2 id="%E3%83%99%E3%82%B9%E3%83%88%E3%83%97%E3%83%A9%E3%82%AF%E3%83%86%E3%82%A3%E3%82%B9">ベストプラクティス</h2>
+<h3 id="1-%E4%BA%8C%E5%80%A4%E5%8C%96%E6%89%8B%E6%B3%95%E3%81%AE%E9%81%B8%E6%8A%9E">1. 二値化手法の選択</h3>
+<ul>
+<li><strong>領域サイズが可変/不明</strong>: Otsuの自動二値化</li>
+<li><strong>領域サイズが固定/既知</strong>: 適応的閾値処理も選択肢</li>
+<li><strong>ノイズが多い</strong>: 前処理（メディアンフィルタ）を併用</li>
+</ul>
+<h3 id="2-%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0%E3%81%AE%E9%96%BE%E5%80%A4%E8%A8%AD%E5%AE%9A">2. テンプレートマッチングの閾値設定</h3>
+<ul>
+<li>初期値: 0.7-0.8（厳格）</li>
+<li>ノイズ有りデータ: 0.1-0.2（緩和）</li>
+<li>経験的最適値: 0.15</li>
+</ul>
+<h3 id="3-%E5%89%8D%E5%87%A6%E7%90%86%E3%81%AE%E9%81%B8%E6%8A%9E">3. 前処理の選択</h3>
+<ul>
+<li>ゴマ塩ノイズ: メディアンフィルタ</li>
+<li>ガウシアンノイズ: ガウシアンフィルタ</li>
+<li>多様なノイズ: メディアンフィルタが最も頑健</li>
+</ul>
+<h3 id="4-%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88%E8%A8%AD%E8%A8%88">4. テンプレート設計</h3>
+<ul>
+<li>検出対象と同じサイズにする</li>
+<li>背景色と前景色を入力画像と整合させる</li>
+<li>角度検出には10°刻みで十分な精度</li>
+</ul>
+<h3 id="5-%E3%83%87%E3%83%90%E3%83%83%E3%82%B0%E3%82%A2%E3%83%97%E3%83%AD%E3%83%BC%E3%83%81">5. デバッグアプローチ</h3>
+<ol>
+<li>少数画像（10-100枚）で高速検証</li>
+<li>中間画像（二値化結果など）を可視化</li>
+<li>統計情報（平均、最大、標準偏差）で評価</li>
+<li>段階的に改善し、各改善の効果を定量測定</li>
+</ol>
+<h2 id="%E5%AE%9F%E8%A3%85%E3%81%AE%E3%83%9D%E3%82%A4%E3%83%B3%E3%83%88">実装のポイント</h2>
+<h3 id="%E3%82%A8%E3%83%A9%E3%83%BC%E3%83%8F%E3%83%B3%E3%83%89%E3%83%AA%E3%83%B3%E3%82%B0">エラーハンドリング</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">if</span> best_val &lt; threshold:
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>, <span class="hljs-number">0.0</span>  <span class="hljs-comment"># 信頼度不足の場合はNoneを返す</span>
+</div></code></pre>
+<h3 id="%E8%A7%92%E5%BA%A6%E8%A8%88%E7%AE%97%E3%81%AE%E6%AD%A3%E8%A6%8F%E5%8C%96">角度計算の正規化</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># 最近接角度を見つけて誤差を計算</span>
+angle_error = abs(detected_angle - ground_truth)
+<span class="hljs-keyword">if</span> angle_error &gt; <span class="hljs-number">180</span>:
+    angle_error = <span class="hljs-number">360</span> - angle_error
+</div></code></pre>
+<h3 id="%E3%83%91%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%B3%E3%82%B9%E6%9C%80%E9%81%A9%E5%8C%96">パフォーマンス最適化</h3>
+<ul>
+<li>テンプレートの事前読み込みとキャッシュ</li>
+<li>必要な領域のみ切り出して処理</li>
+<li>適切な画像サイズでの処理（過度な高解像度を避ける）</li>
+</ul>
+<h2 id="%E9%87%8D%E8%A6%81%E3%81%AA%E6%8A%80%E8%A1%93%E7%9A%84%E6%B1%BA%E5%AE%9A">重要な技術的決定</h2>
+<h3 id="%E4%BA%8C%E5%80%A4%E5%8C%96%E6%89%8B%E6%B3%95%E3%81%AE%E6%AF%94%E8%BC%83">二値化手法の比較</h3>
+<p><img src="asset/13_threshold_comparison.png" alt="適応的閾値 vs Otsu"></p>
+<p><strong>左: 適応的閾値処理</strong></p>
+<ul>
+<li>固定ブロックサイズ（11×11）を使用</li>
+<li>局所的な明度変化には強い</li>
+<li>領域サイズが変わると性能が低下</li>
+<li><strong>結果</strong>: 平均角度誤差 88.34°</li>
+</ul>
+<p><strong>右: Otsuの自動二値化</strong></p>
+<ul>
+<li>画像全体の統計から最適閾値を計算</li>
+<li>領域サイズに依存しない</li>
+<li>グローバルな閾値で一貫した結果</li>
+<li><strong>結果</strong>: 平均角度誤差 3.32° ← <strong>96%改善</strong></li>
+</ul>
+<p>この比較から、<strong>Otsuの自動二値化</strong>が圧倒的に優れていることが実証された。</p>
+<h2 id="%E3%81%BE%E3%81%A8%E3%82%81">まとめ</h2>
+<p>本手法の成功要因は以下の3点：</p>
+<ol>
+<li><strong>Otsuの自動二値化</strong>: 領域サイズに依存しない頑健な検出を実現</li>
+<li><strong>正規化相互相関</strong>: ノイズや明度変化に強いマッチング手法</li>
+<li><strong>適切な前処理</strong>: メディアンフィルタによる効果的なノイズ除去</li>
+</ol>
+<p>これらの組み合わせにより、12種類の多様なノイズに対して100%の文字認識精度と3.32°の高精度なハート角度検出を達成した。</p>
+<h3 id="%E8%A6%96%E8%A6%9A%E7%9A%84%E3%81%AA%E5%87%A6%E7%90%86%E4%BE%8B">視覚的な処理例</h3>
+<p>本ドキュメントの各セクションに掲載されている画像は、実際の処理結果を示している：</p>
+<ul>
+<li><strong>前処理の各ステップ</strong>: ノイズ除去から二値化までの変化</li>
+<li><strong>テンプレート例</strong>: 使用している36個のハートテンプレートと文字テンプレート</li>
+<li><strong>マッチング結果</strong>: ヒートマップと検出位置の可視化</li>
+<li><strong>手法比較</strong>: 適応的閾値とOtsuの二値化の違い</li>
+</ul>
+<p>これらの画像は <code>asset/</code> フォルダに保存されており、<code>generate_documentation_images.py</code> スクリプトで再生成可能。</p>
+<h2 id="%E5%8F%82%E8%80%83%E5%AE%9F%E8%A3%85">参考実装</h2>
+<ul>
+<li>メイン解析スクリプト: <code>analyze.py</code></li>
+<li>画像処理ユーティリティ: <code>image_utils.py</code></li>
+<li>テンプレート生成: <code>../analyzer/generate_*_templates.py</code></li>
+<li>前処理ライブラリ: <code>preprocessing.py</code></li>
+</ul>
+
+</body>
+</html>
