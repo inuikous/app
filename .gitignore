@@ -55,7 +55,9 @@ D-FINE_analyzer/coco_dataset/
 D-FINE_analyzer/checkpoints/
 D-FINE_analyzer/pretrained_models/
 D-FINE_analyzer/.venv/
-templates
+templates/
+heart_templates/
+debug_*/
 
 # Dataset (comment out if you want to track it)
 dataset/

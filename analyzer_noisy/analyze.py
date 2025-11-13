@@ -18,6 +18,7 @@ current_dir = Path(__file__).parent
 
 # テンプレートは analyzer フォルダのものを使用
 template_dir = current_dir.parent / 'analyzer' / 'templates'
+heart_template_dir = current_dir.parent / 'analyzer' / 'heart_templates'
 
 from image_utils import (
     detect_heart_angle,
@@ -25,15 +26,19 @@ from image_utils import (
     draw_results_on_image,
     generate_accuracy_plots,
     load_templates,
+    load_heart_templates,
     set_preprocessing_pipeline,
     set_debug_mode
 )
 
 
-# 領域定義（analyzer/analyze.py と同じ）
-HEART_REGION = (180, 100, 420, 340)  # (left, top, right, bottom)
-TOP_RIGHT_REGION = (480, 180, 600, 300)  # 右上の円
-BOTTOM_RIGHT_REGION = (480, 340, 600, 460)  # 右下の円
+# 領域定義
+# ハート: 中心(200, 400), サイズ150 → 120ピクセルの余裕で 240×240
+HEART_REGION = (80, 280, 320, 520)  # (left, top, right, bottom) = 240×240
+# 円の中心: 右上(650, 150), 右下(650, 450), 半径100
+# 余裕を持って中心±110で切り出し（220x220）
+TOP_RIGHT_REGION = (540, 40, 760, 260)  # 右上の円: 中心650,150 → 540-760, 40-260
+BOTTOM_RIGHT_REGION = (540, 340, 760, 560)  # 右下の円: 中心650,450 → 540-760, 340-560
 
 
 def extract_ground_truth_from_filename(filename):
@@ -129,7 +134,6 @@ def analyze_single_image(image_path, ground_truth=None, save_visualization=False
             gray_full = img_array
         
         # 画像ファイル名から識別子を作成
-        import os
         base_name = os.path.splitext(os.path.basename(image_path))[0]
         
         # 前処理パイプラインを適用（デバッグモードで各段階を保存）
@@ -210,6 +214,7 @@ def analyze_dataset(dataset_dir='dataset_noisy', output_dir='analyzer_noisy/outp
     # テンプレートを事前読み込み
     print("テンプレートを読み込み中...")
     load_templates(str(template_dir))
+    load_heart_templates(str(heart_template_dir))
     
     # 出力ディレクトリを作成
     os.makedirs(output_dir, exist_ok=True)
